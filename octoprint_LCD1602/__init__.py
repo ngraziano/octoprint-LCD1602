@@ -72,7 +72,7 @@ class LCD1602Plugin(octoprint.plugin.StartupPlugin,
     percent = int(progress/6.25)+1
     completed = '\x01'*percent
     mylcd.clear()
-    message = 'T:{0:3.0f}° P:{1:3.0}%'.format(tool_temp, progress)
+    message = 'T:{0:3.0f}° P:{1:3}%'.format(tool_temp, progress)
     mylcd.write_string(message)
     mylcd.cursor_pos = (1,0)
     mylcd.write_string(completed)
