@@ -38,8 +38,6 @@ class LCD1602Plugin(octoprint.plugin.StartupPlugin,
       self.block.append(255)
       self.mylcd.create_char(1,self.block)
     
-    # init vars
-    self.start_date = 0
 
     # create block for progress bar
     #self.mylcd.create_char(1,self.block)
@@ -64,22 +62,24 @@ class LCD1602Plugin(octoprint.plugin.StartupPlugin,
   
   def on_print_progress(self,storage,path,progress):
     mylcd = self.mylcd
+    
+    temps = self._printer.get_current_temperatures()
+    tool_temp = temps['tool0']['actual']
+    
+    job_data = self._printer.get_current_job()
+    print_time = job_data["estimatedPrintTime"]
+
     percent = int(progress/6.25)+1
     completed = '\x01'*percent
     mylcd.clear()
-    mylcd.write_string('Completed: '+str(progress)+'%')
+    message = 'T:{0:3.0f}° P:{1:3.0}%'.format(tool_temp, progress)
+    mylcd.write_string(message)
     mylcd.cursor_pos = (1,0)
     mylcd.write_string(completed)
 
-    if progress==1 :
-      self.start_date=time.time()
-  
-    if progress>10 and progress<100:
-      now=time.time()
-      elapsed=now-self.start_date
-      average=elapsed/(progress-1)
-      remaining=int((100-progress)*average)
-      remaining=str(datetime.timedelta(seconds=remaining))
+    if progress<100:
+      remaining=str(datetime.timedelta(seconds=print_time))
+      
       mylcd.cursor_pos = (1,3)
       mylcd.write_string(remaining)
 
