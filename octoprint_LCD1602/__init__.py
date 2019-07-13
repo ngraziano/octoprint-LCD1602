@@ -58,6 +58,14 @@ class LCD1602Plugin(octoprint.plugin.StartupPlugin,
     mylcd = self.mylcd
     self._logger.info("plugin initialized !")
 
+  def show_temp(self,comm, parsed_temps):
+    tool_temp = parsed_temps.get('T0',(None,None))[0]
+    if tool_temp:
+      self.mylcd.cursor_pos = (0,0)
+      message = 'T:{0:3.0f}\xb0'.format(tool_temp)
+      mylcd.write_string(message)
+      
+    return parsed_temps
   
   def on_print_progress(self,storage,path,progress):
     mylcd = self.mylcd
@@ -66,7 +74,7 @@ class LCD1602Plugin(octoprint.plugin.StartupPlugin,
     tool_temp = temps['tool0']['actual']
     
     job_data = self._printer.get_current_job()
-    print_time = job_data["estimatedPrintTime"]
+    print_time = round(job_data["estimatedPrintTime"])
 
     percent = int(progress/6.25)+1
     completed = '\x01'*percent
@@ -92,6 +100,7 @@ class LCD1602Plugin(octoprint.plugin.StartupPlugin,
       
     if event in "Connected":
       mylcd.clear()
+      mylcd.cursor_pos = (0,7)
       mylcd.write_string('Connected to:')
       mylcd.cursor_pos = (1,0)
       mylcd.write_string(payload["port"])
@@ -99,8 +108,7 @@ class LCD1602Plugin(octoprint.plugin.StartupPlugin,
     if event in "Shutdown":
       mylcd.clear()
       mylcd.write_string('Bye bye ^_^')
-      time.sleep(1)
-      mylcd._set_backlight_enabled(False)
+      mylcd.backlight_enabled = False
       mylcd.close()
     
     
@@ -108,38 +116,35 @@ class LCD1602Plugin(octoprint.plugin.StartupPlugin,
       
       if payload["state_string"] in "Offline":
         mylcd.clear()
-        mylcd.write_string('Octoprint is not connected')
-        time.sleep(2)
-        mylcd.clear()
-        mylcd.write_string('saving a polar bear, eco mode ON')
-        time.sleep(5)
-        mylcd._set_backlight_enabled(False)
+        mylcd.cursor_pos = (1,0)
+        mylcd.write_string('not connected')
+        mylcd.backlight_enabled = False
       
       if payload["state_string"] in "Operational":
-        mylcd._set_backlight_enabled(True)
+        mylcd.backlight_enabled = True
         mylcd.clear()
-        mylcd.write_string('Printer is       Operational')
+        mylcd.cursor_pos = (1,0)
+        mylcd.write_string('Operational')
       
       if payload["state_string"] in "Cancelling":
         mylcd.clear()
-        mylcd.write_string('Printer  is Cancelling job') 
-        time.sleep(0.2)
+        mylcd.cursor_pos = (1,0)
+        mylcd.write_string('Cancelling job') 
       
       if payload["state_string"] in "PrintCancelled":
         mylcd.clear()
-        time.sleep(0.5)
-        mylcd.write_string(' Job has been Cancelled (0_0) ' ) 
-        time.sleep(2)
+        mylcd.cursor_pos = (1,0)
+        mylcd.write_string('Job Cancelled' ) 
       
       if payload["state_string"] in "Paused":
         mylcd.clear()
-        time.sleep(0.5)
-        mylcd.write_string('Printer is  Paused') 
+        mylcd.cursor_pos = (1,0)
+        mylcd.write_string('Paused') 
 
       if payload["state_string"] in "Resuming":
         mylcd.clear()
-        mylcd.write_string('Printer is Resuming its job') 
-        time.sleep(0.2)
+        mylcd.cursor_pos = (1,0)
+        mylcd.write_string('Resuming') 
 
   def get_update_information(self):
       return dict(
@@ -164,5 +169,6 @@ def __plugin_load__():
 
 	global __plugin_hooks__
 	__plugin_hooks__ = {
-		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information
+		"octoprint.plugin.softwareupdate.check_config": __plugin_implementation__.get_update_information,
+    "octoprint.comm.protocol.temperatures.received": __plugin_implementation__.show_temp
 	}
