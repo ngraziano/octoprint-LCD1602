@@ -12,8 +12,9 @@ import time
 import datetime
 import os
 import sys
-from fake_rpi import printf
-import fake_rpi
+
+if (os.getenv('LCD1602_DOCKER')):
+  import fake_rpi
 
 
 class LCD1602Plugin(octoprint.plugin.StartupPlugin,
