@@ -5,7 +5,6 @@
 """
 
 from __future__ import absolute_import
-from octoprint.printer.estimation import PrintTimeEstimator
 import octoprint.plugin
 import octoprint.events
 from RPLCD.i2c import CharLCD
@@ -31,7 +30,7 @@ class LCD1602Plugin(octoprint.plugin.StartupPlugin,
       except:
         print('Cannot load fake_rpi !')
     else:
-      self.mylcd = CharLCD(i2c_expander='PCF8574', address=0x27, cols=16, rows=2, backlight_enabled=True, charmap='A00')
+      self.mylcd = CharLCD(i2c_expander='PCF8574', address=0x27, cols=16, rows=2, backlight_enabled=True, charmap='A02')
       
       # create block for progress bar
       self.block = bytearray(b'\xFF\xFF\xFF\xFF\xFF\xFF\xFF')
@@ -72,7 +71,7 @@ class LCD1602Plugin(octoprint.plugin.StartupPlugin,
     percent = int(progress/6.25)+1
     completed = '\x01'*percent
     mylcd.clear()
-    message = 'T:{0:3.0f}° P:{1:3}%'.format(tool_temp, progress)
+    message = 'T:{0:3.0f}\xb0 P:{1:3}%'.format(tool_temp, progress)
     mylcd.write_string(message)
     mylcd.cursor_pos = (1,0)
     mylcd.write_string(completed)
