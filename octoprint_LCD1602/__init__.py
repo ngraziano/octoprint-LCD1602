@@ -63,7 +63,7 @@ class LCD1602Plugin(octoprint.plugin.StartupPlugin,
     if tool_temp:
       self.mylcd.cursor_pos = (0,0)
       message = 'T:{0:3.0f}\xb0'.format(tool_temp)
-      mylcd.write_string(message)
+      self.mylcd.write_string(message)
       
     return parsed_temps
   
